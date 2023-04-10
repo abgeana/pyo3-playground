@@ -1,3 +1,4 @@
+use numpy::PyArray1;
 use pyo3::prelude::*;
 
 #[pyfunction]
@@ -11,10 +12,13 @@ fn rust_function(arg: &PyAny) -> PyResult<()> {
             );
         }
         "<class 'numpy.ndarray'>" => {
-            println!(
-                "got a numpy ndarray with shape[0] = {:?}",
-                arg.getattr("shape").unwrap().get_item(0).unwrap()
-            );
+            let dtype = arg.getattr("dtype").unwrap();
+            println!("got a numpy array of dtype {}", dtype);
+            let numpy_array = match dtype.to_string().as_str() {
+                "int8" => arg.downcast::<PyArray1<i8>>().unwrap(),
+                _ => panic!("unknown dtype :("),
+            };
+            println!("numpy array has shape {:?}", numpy_array.shape());
         }
         u => println!("argument type {} is unsupported", u),
     }
